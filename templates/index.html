@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Natural Gas Price Prediction</title>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,600&display=swap" rel="stylesheet">
+
+  <!-- Connect external CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    /* ---------- Background & Base Setup ---------- */
+    body {
+      margin: 0;
+      padding: 0;
+      background: url('{{ url_for("static", filename="css/space.gif") }}') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    /* Neon overlay effect */
+    .neonOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('{{ url_for("static", filename="css/neon.gif") }}') center center / cover no-repeat;
+      opacity: 0.18;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ---------- Main Container ---------- */
+    .mainContainer {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: stretch;
+      width: 950px;
+      height: 420px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      border: 1px solid rgba(0, 255, 255, 0.15);
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* ---------- Panels ---------- */
+    .leftPanel {
+      flex: 1.1;
+      background: rgba(10, 10, 10, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      border-right: 2px solid rgba(0, 255, 255, 0.2);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .leftPanel h2 {
+      font-weight: 600;
+      color: #ffffff;
+      font-size: 26px;
+      line-height: 1.5;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+    }
+
+    .centerPanel {
+      flex: 1.5;
+      background: rgba(15, 15, 15, 0.75);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .centerPanel h2 {
+      font-weight: 600;
+      color: #00ffff;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+    }
+
+    /* ---------- Inputs & Buttons ---------- */
+    label {
+      color: #ddd;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .inputFields, select {
+      width: 220px;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 255, 255, 0.6);
+      background: rgba(25, 25, 25, 0.6);
+      color: #fff;
+      outline: none;
+      text-align: center;
+      transition: 0.3s;
+    }
+
+    .inputFields:focus, select:focus {
+      border-color: #00ffff;
+      box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+    }
+
+    #pred-btn {
+      border: 1px solid rgba(0, 255, 255, 0.8);
+      background: rgba(10, 10, 10, 0.7);
+      font-size: 18px;
+      color: white;
+      margin-top: 20px;
+      padding: 10px 45px;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+
+    #pred-btn:hover {
+      background: rgba(0, 255, 255, 0.25);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+      transform: scale(1.05);
+    }
+
+    /* ---------- Right Panel ---------- */
+    .rightPanel {
+      flex: 1.1;
+      background: rgba(10, 10, 10, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      border-left: 2px solid rgba(0, 255, 255, 0.2);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .resultTitle {
+      font-size: 16px;
+      color: #bbb;
+      margin-bottom: 10px;
+    }
+
+    .resultValue {
+      font-size: 30px;
+      color: #00ffcc;
+      font-weight: 700;
+      text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    }
+
+    .errorBox {
+      color: #ff5c5c;
+      font-weight: 600;
+      background: rgba(255, 0, 0, 0.1);
+      border: 1px solid rgba(255, 0, 0, 0.4);
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(255, 0, 0, 0.4); }
+      50% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Neon overlay effect -->
+  <div class="neonOverlay"></div>
+
+  <div class="mainContainer">
+    <!-- Left: Title -->
+    <div class="leftPanel">
+      <h2>Natural Gas<br>Price Prediction</h2>
+    </div>
+
+    <!-- Center: Form -->
+    <div class="centerPanel">
+      <h2>Enter Date to Predict</h2>
+      <form action="{{ url_for('prediction') }}" method="post">
+        <label for="method">Choose a Method:</label><br>
+        <select name="method" id="method" required>
+          <option value="1">Random Forest Method</option>
+          <option value="2">Decision Tree Method</option>
+        </select><br>
+        <input type="number" class="inputFields" name="year" placeholder="Year" required><br>
+        <input type="number" class="inputFields" name="month" placeholder="Month" required><br>
+        <input type="number" class="inputFields" name="day" placeholder="Day" required><br>
+        <button type="submit" id="pred-btn">Predict</button>
+      </form>
+    </div>
+
+    <!-- Right: Result -->
+    <div class="rightPanel">
+      {% if predic_text %}
+        {% if "Invalid" in predic_text %}
+          <div class="errorBox">⚠️ {{ predic_text }}</div>
+        {% else %}
+          <div class="resultTitle">Gas Price for the given date is:</div>
+          <div class="resultValue">{{ predic_text }}</div>
+        {% endif %}
+      {% else %}
+        <div class="resultTitle">Gas Price for the given date is:</div>
+        <div class="resultValue">--.-- Dollars</div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
